@@ -1,3 +1,67 @@
 /**
  * Place your custom CSS styles here.
  **/
+
+ div.accordion { 
+    background-color: #e2e1da;
+    position: relative;
+    max-width: 793px;
+    min-height: 46px;
+    _width: auto;
+    _height: 46px;
+    margin-right: 86px;
+    cursor: pointer;
+    font-size: 81%;
+ }
+
+div.accordion.active, {
+    background-color: #33322f;
+}
+
+
+
+div.panel {
+    padding: 0 18px;
+    background-color: white;
+    max-height: 0;
+    overflow: hidden;
+    transition: 0.6s ease-in-out;
+    overflow-y: scroll;
+
+    
+    display: inline block;
+}
+
+div.panel.show {
+    background-color: #33322f;
+    opacity: 1;
+    max-width: 793px;
+    min-height: 500px;
+}
+
+div.optionColumn {
+    height: 500px;
+    display: inline-block;
+    background-color: #f1f0e8;
+    border: 1px solid white;
+}
+div.optionColumnHeader {
+    width: 100%;
+    border: 1px solid black;
+}
+
+#brandColumn {
+    width: 23%;
+}
+
+#typeColumn {
+    width: 23%;
+}
+
+#materialColumn {
+    width: 23%;
+}
+
+#specialColumn {
+    width: 23%;
+}

@@ -4,6 +4,7 @@
   "manifest_version": 2,
   "description": "This extension was created with the awesome extensionizr.com",
   "homepage_url": "http://extensionizr.com",
+  
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -18,16 +19,19 @@
   },
   "options_page": "src/options/index.html",
   "permissions": [
+    "activeTab",
     "clipboardRead",
     "clipboardWrite",
     "contextMenus",
     "tabs",
-    "^(http:\\/\\/)?((list([0-9]{0,2})?.)?|(page([0-9]{0,2})?.)?)auctions(.search)?.yahoo.co.jp\\/(?!advanced?)(.)*$"
+    "http://auctions.search.yahoo.co.jp/"
   ],
   "content_scripts": [
     {
       "matches": [
-        "https://www.google.com/*"
+        "http://auctions.search.yahoo.co.jp/*",
+        "http://auctions.yahoo.co.jp/*",
+        "http://*.auctions.seaerch.yahoo.co.jp/*"
       ],
       "css": [
         "src/inject/inject.css"
@@ -35,9 +39,12 @@
     },
     {
       "matches": [
-        "https://www.google.com/*"
+        "http://auctions.search.yahoo.co.jp/*",
+        "http://auctions.yahoo.co.jp/*",
+        "http://*.auctions.seaerch.yahoo.co.jp/*"
       ],
       "js": [
+        "js/jquery/jquery.js",
         "src/inject/inject.js"
       ]
     }
