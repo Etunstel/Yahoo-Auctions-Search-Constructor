@@ -1,0 +1,37 @@
+/*
+    #242424
+    #dfc74c
+    #5a4803
+    #e5d27c
+    #f1f0e8
+    #ffda45
+ */
+
+
+div{
+	width:100%;
+	font-weight: bold;
+	margin-top: : 1em;
+	margin-bottom: 1em;
+	margin:auto;
+	display:block;
+}
+
+
+#dictionaryPrint {
+	width : 100%;
+	min-height:200px;
+	height:auto;
+	overflow-y:scroll;
+	background-color: white;
+	z-index: 0;
+	border:1px dashed #242424;;
+}
+
+body {
+	height:500px;
+	width:500px;
+	background-color: #f1f0e8;
+	border:5px solid #242424;
+	display:block;
+}

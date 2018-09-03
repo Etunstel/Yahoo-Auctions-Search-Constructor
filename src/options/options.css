@@ -1,0 +1,133 @@
+
+/*
+    #242424
+    #dfc74c
+    #5a4803
+    #e5d27c
+    #f1f0e8
+    #ffda45
+ */
+
+
+
+
+body{
+    background-color: #f1f0e8;
+}
+
+
+table, th, td {
+    border: 1px solid#242424;
+    border-collapse:collapse;
+}
+table {
+    width: 50%;
+    z-index: 0;
+    margin-left: auto;
+    margin-right:auto;
+}
+
+.tableplaceholder {
+    width:100%;
+    text-align: center;
+}
+
+.savebutton{
+    display:block;
+    margin-left: auto;
+    margin-right:auto;
+}
+
+tr>td :nth-child(1){
+    width:20%;
+    max-width:20%;
+}
+
+tr>td:nth-child(2){
+    min-width:80%;
+    width:80%;
+}
+
+th {
+    background-color: #ffda45;
+}
+
+
+
+tr:nth-child(odd) {
+    background-color: #5a4803;
+}
+
+tr:nth-child(even) {
+    background-color: white;
+}
+
+
+.translationouter{
+    width: 300px;
+    max-width: 100%;
+    min-height:80px;
+    height:auto;
+    margin:auto;
+    line-height: 1.5;
+    border: 1px solid #5a4803;
+    overflow: hidden;
+    display:block;
+    padding:4px;
+    border-collapse:collapse;
+    position: relative;
+    border-radius:4px;
+}
+
+#translationaddbox{
+    display: inline-block;
+    border: 0;
+    padding:0;
+    outline: none;
+    margin: 0em;
+    font-size: 1em;
+    line-height: 1;
+    cursor: text;
+    border-radius: 0;
+    border-spacing: 2px;
+    border-collapse: collapse;
+    vertical-align: super;
+    overflow:hidden;
+    background-color: inherit;
+}
+
+.englisheditbox {
+    width : 100%!important;
+    max-width:100%;
+    min-width:100%;
+}
+
+.keywordtag:nth-child(odd) {
+     background: #ffda45;
+}
+
+.keywordtag:nth-child(even) {
+     background: #5a4803;
+}
+
+.keywordtag {
+    cursor: default;
+    border-radius: .25em;
+    padding: .25em;
+    margin: 0 .25em;
+    line-height: 1.5;
+    white-space: nowrap;
+    text-align:center;
+    display:inline-block;
+    overflow: hidden;
+    border-collapse: collapse;
+    font-weight: bold;
+}
+
+.keyworddelete {
+    cursor: pointer;
+    padding-left: .25em;
+    cursor:default;
+    font-weight: bold;
+    vertical-align: bottom;
+}

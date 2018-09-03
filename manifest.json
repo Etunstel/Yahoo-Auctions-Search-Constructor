@@ -1,14 +1,14 @@
 {
-  "name": "CHANGE THIS : Extension boilerplate",
+  "name": "Ki",
   "version": "0.0.1",
   "manifest_version": 2,
-  "description": "This extension was created with the awesome extensionizr.com",
-  "homepage_url": "http://extensionizr.com",
-  
+  "description": "Manage translations for English keywords and easily construct more detailed search queries for Yahoo Auctions.",
+  "homepage_url": "http://auctions.yahoo.co.jp",
   "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
+    "16": "icons/temporaryicon16.png",
+    "19": "icons/temporaryicon19.png",
+    "48": "icons/temporaryicon48.png",
+    "128": "icons/temporaryicon128.png"
   },
   "default_locale": "en",
   "background": {
@@ -17,21 +17,33 @@
     ],
     "persistent": true
   },
-  "options_page": "src/options/index.html",
+  "options_page": "src/options/options.html",
   "permissions": [
     "activeTab",
     "clipboardRead",
     "clipboardWrite",
     "contextMenus",
+    "storage",
     "tabs",
     "http://auctions.search.yahoo.co.jp/"
   ],
+
+"browser_action": {
+  "default_icon": {
+      "16": "icons/temporaryicon16.png",
+    "19": "icons/temporaryicon19.png",
+    "48": "icons/temporaryicon48.png",
+    "128": "icons/temporaryicon128.png"
+    },
+      "default_popup": "src/popup/popup.html",
+      "default_title": "Keyword Manager"
+  },
   "content_scripts": [
     {
       "matches": [
         "http://auctions.search.yahoo.co.jp/*",
         "http://auctions.yahoo.co.jp/*",
-        "http://*.auctions.seaerch.yahoo.co.jp/*"
+        "http://*.auctions.search.yahoo.co.jp/*"
       ],
       "css": [
         "src/inject/inject.css"
@@ -44,7 +56,6 @@
         "http://*.auctions.seaerch.yahoo.co.jp/*"
       ],
       "js": [
-        "js/jquery/jquery.js",
         "src/inject/inject.js"
       ]
     }
