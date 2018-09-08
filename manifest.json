@@ -43,21 +43,18 @@
       "matches": [
         "http://auctions.search.yahoo.co.jp/*",
         "http://auctions.yahoo.co.jp/*",
-        "http://*.auctions.search.yahoo.co.jp/*"
+        "http://*.auctions.search.yahoo.co.jp/*",
+        "https://auctions.search.yahoo.co.jp/*",
+        "https://auctions.yahoo.co.jp/*",
+        "https://*.auctions.search.yahoo.co.jp/*"
       ],
       "css": [
         "src/inject/inject.css"
-      ]
-    },
-    {
-      "matches": [
-        "http://auctions.search.yahoo.co.jp/*",
-        "http://auctions.yahoo.co.jp/*",
-        "http://*.auctions.seaerch.yahoo.co.jp/*"
       ],
       "js": [
         "src/inject/inject.js"
       ]
     }
-  ]
+  ],
+  "web_accessible_resources": ["script.js"]
 }
