@@ -1,2 +1,2 @@
 # Yahoo-Auctions-Search-Constructor
-Stores various Japanese translations for keywords in order to construct more detailed searches on [Yahoo Auctions](http://auctions.yahoo.co.jp/). 
+Stores lists of equivalent Japanese/English keywords/phrases for English keywords/phrases in order to construct more detailed searches on [Yahoo Auctions](https://auctions.yahoo.co.jp/). Creates a more detailed version of the user's input when the user hits `CTRL`+`Space`.
