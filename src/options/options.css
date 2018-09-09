@@ -27,43 +27,72 @@ body{
     margin-bottom: 100px;
 }
 
-
-table, th, td {
-    border: 1px solid#242424;
+table{
+    border:none;
     border-collapse:collapse;
+    line-height: 2;
+    display: block;
+    table-layout: fixed;
+    font-size: 1em;
+    margin-left: auto;
+    margin-right:auto;
+}
+
+tbody, th, td, tr {
+    border: 2px solid#242424;
+    border-collapse:collapse;
+}
+
+tbody{
+    width:100%;
+    min-width:100%;
+    display:table;
 }
 
 div{
     text-align: center;
-    width:50;
-}
-table {
-    width: 60%;
-    line-height: 2;
-    display: inline-block;
-    table-layout: fixed;
-    font-size: 1em;
 }
 
-.table-outer{
-    width:50%;
+#table-outer{
+    width:60%;
     margin-left: auto;
     margin-right:auto;
 }
+
+
+th {
+    background-color: #ffda45;
+}
+
+
+tr{
+    opacity: 1;
+    transition: opacity .50s ease-in-out;
+    min-width:100%;
+    width:100%;
+}
+
+tr:nth-child(odd) {
+}
+
+tr:nth-child(even) {
+}
+
 
 td{
     background-color: white;
 }
 
 
-td.table-placeholder {
-    width:100%!important;
-    border: none;
-    text-align: center;
-}
-
 td.translation-column{
     text-align: left;
+}
+
+
+td[colspan = "3"].table-placeholder{
+    width:100%!important;
+    max-width:100%!important;
+    min-width: 100%!important;
 }
 
 
@@ -74,8 +103,12 @@ td:nth-child(1){
 }
 
 td:nth-child(2){
-    min-width:75%;
+    max-width:75%;
     width:75%;
+}
+
+td:nth-child(3){
+    width:auto;
 }
 
 td[contentEditable="true"].input-error{
@@ -84,21 +117,15 @@ td[contentEditable="true"].input-error{
 }
 
 
-.keyoword-row{
+.keyword-row{
 }
 
 .save-button{
     display:block;
     margin-left: auto;
-    margin-right:auto;
+    margin-right: auto;
 }
 
-
-
-th {
-    background-color: #ffda45;
-    text-align: center;
-}
 
 .delete-column{
     font-weight: bold;
@@ -114,17 +141,6 @@ th {
 
 h1{
     text-align: center;
-}
-
-tr{
-    opacity: 1;
-    transition: opacity .50s ease-in-out;
-}
-
-tr:nth-child(odd) {
-}
-
-tr:nth-child(even) {
 }
 
 
@@ -165,7 +181,6 @@ tr:nth-child(even) {
 
 .edit-box {
     width : 100%!important;
-    min-width:100%;
     background-color: inherit;
 }
 
