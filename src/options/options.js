@@ -21,13 +21,6 @@ function isEmpty(obj) {
 	return true;
 }
 
-
-function addQuotes(str) {
-  return "\"" + str + "\"";
-}
-
-
-
 function validateEnglishInput(cell){
 	var text = cell.innerHTML;
 	 if(!ENGLISH_REGEX.test(text)){
@@ -201,13 +194,13 @@ function addTableRow(table, englishName, keywords) {
    newRow.appendChild(deleteTD);
    newRow.classList.add("keyword-row");
 
-   japaneseTD.addEventListener('click', function(event) {
-	  makeTranslationsEditable(this);
+   japaneseTD.addEventListener('click',  function(event) {
+   	if (!window.getSelection().toString()) //nothing highlighted
+	  	makeTranslationsEditable(this);
    })
 
    if(keywords.length ===0 )
 	  makeEnglishEditable(englishTD);
-
 
    table.tBodies[0].appendChild(newRow);
 
@@ -225,9 +218,6 @@ function deleteRow(table, row) {
 	var tableBody = table.firstChild;
 
 	var placeHolder = document.getElementById("table-placeholder");
-
-	if(englishName.includes(" "))
-	  englishName = addQuotes(englishName);
 
 	delete dictionary.keywords[englishName];
 
@@ -267,11 +257,19 @@ function populateTable(table, dictionary){
 	 addTablePlaceHolder(table);
   } else {
 	  var names = Object.keys(dictionary.keywords);
-	  names.sort();
-	 names.forEach(function(key,index) {
+	  names.sort(function(a,b){
+	  	a2 = a.replace(/["]/g, "");
+	  	b2 = b.replace(/["]/g, "");
+	  	return a2.localeCompare(b2);});
+	  names.forEach(function(key,index) {
 		addTableRow(table, key, dictionary.keywords[key]);
 	});
   }
+}
+
+function scrollDown(table) {
+	var container = table.parentNode;
+	container.scrollTop = container.scrollHeight;
 }
 
 
@@ -396,10 +394,7 @@ function saveDictionaryChanges() {
 	for (var i = 0; i < rows.length; i++) {
 	  var row = rows[i];
 	  var englishTD = row.children[0];
-	  var englishName = englishTD.innerHTML.toLowerCase();
-
-	  if(englishName.includes(" "))
-		  englishName = addQuotes(englishName);
+	  var englishName = englishTD.innerHTML.toLowerCase().replace(/;&nbsp/g, "");
 
 	  var keywords = row.children[1].innerHTML.split(",");
 	  d.keywords[englishName] = keywords;
@@ -438,6 +433,7 @@ function init() {
 
 	  addButton.addEventListener("click", function(event) {
 		addTableRow(keywordTable, "New Keyword", []);
+		scrollDown(keywordTable);
 	  })
 
 	  reloadDictionary(table, populateTable);

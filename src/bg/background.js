@@ -8,14 +8,20 @@ OR_SEARCH_REGEX = /\([^\)\(]+\s[^\)\(]+\)/;
 // matches only ND searches: keyword1 keyword2 keyword3
 //AND_SEARCH_REGEX = /(?:[^\)\(\s]+\s?)+/;
 
+var SPACED_KEYWORD_REGEX = /^(^"[^"':;\s]+(?:\s+[^"':;\s]+)+")$/;
+var ENGLISH_REGEX = /^(^[^"':;\s]+(?:\s+[^"':;\s]+)*)$/;
 
 function Dictionary(title) {
 		this.title = title;
 		this.keywords = {};
 }
 
-var background = {
+function SearchList(name){
+	this.name = name;
+	this.searches = {};
+}
 
+var background = {
 
 	addKeyword : function(request, sender, sendResponse) {
 		//console.log("Adding " + request.englishName)
@@ -61,6 +67,13 @@ var background = {
 		});
 	},
 
+	saveFavoriteSearches: function(request, sender, sendResponse) {
+		chrome.storage.sync.set({"favoriteSearches": request.searches}, function() {
+			favoriteSearches = request.searches;
+			console.log("Searches Saved.");
+		});
+	},
+
 	loadDictionary : function() {
 		chrome.storage.sync.get(["mainDictionary"], function(result) {
 
@@ -75,6 +88,35 @@ var background = {
 		});
 	},
 
+	addFavoriteSearch: function(request, sender, sendResponse) {
+		favoriteSearches.searches[request.name] = request.query;
+		this.saveFavoriteSearches({searches: favoriteSearches});
+		sendResponse("Search added/updated.");
+	},
+
+	removeFavoriteSearch: function(request, sender, sendResponse) {
+		if(favoriteSearches.searches[request.name] === undefined) {
+			sendResponse("Favorite search does not exist");
+		} else {
+			delete favoriteSearches.searches[request.name];
+			this.saveFavoriteSearches({searches: favoriteSearches});
+			sendResponse("Search removed");
+		}
+	},
+
+	loadFavoriteSearches: function() {
+		chrome.storage.sync.get(["favoriteSearches"], function(result) {
+		test = result["favoriteSearches"]
+		if(!test || typeof test === undefined) {
+			setFavoriteSearches(new SearchList("Favorite Searches"));
+		}
+		else {
+			console.log("Saved Searches loaded.");
+			setFavoriteSearches(test);
+		}
+		});
+	},
+
 	getDictionary: function(request, sender, sendResponse) {
 		sendResponse(dictionary);
 	},
@@ -84,6 +126,17 @@ var background = {
 		dictionary = d;
 		this.saveDictionary({dict:dictionary});
 		sendResponse("Dictionary removed")
+	},
+
+	getFavoriteSearches: function(request, sender, sendResponse) {
+		sendResponse(favoriteSearches);
+	},
+
+	clearFavoriteSearches: function(request, sender, sendResponse) {
+		var newFavorites = new SearchList("Favorite Searches");
+		favoriteSearches = newFavorites;
+		this.saveFavoriteSearches({searches:favoriteSearches});
+		sendResponse("Searches cleared")
 	},
 
 
@@ -100,9 +153,12 @@ var background = {
 
 		this.loadDictionary();
 
+		this.loadFavoriteSearches();
+
+		createContextMenus();
+
 		chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
-			console.log("Message recieved", request);
 			if(request.fn in background) {
 				background[request.fn](request, sender, sendResponse);
 				return true;
@@ -110,11 +166,10 @@ var background = {
 
 		});
 
-		createContextMenus();
 	},
 };
 
-function openOptionsTab(){
+function menuOpenOptions(){
 	if (chrome.runtime.openOptionsPage) {
 	chrome.runtime.openOptionsPage();
   } else {
@@ -122,34 +177,97 @@ function openOptionsTab(){
   }
 }
 
-function contextMenuHandle(){
-	// TODO
+
+function menuAddTranslation() {
+
+	do{
+		keywordName = prompt("Add selection as translation for: ");
+	} while(keywordName != null && !keywordName.trim().match(ENGLISH_REGEX)
+								&& !keywordName.trim().match(SPACED_KEYWORD_REGEX))
+	if(keywordName == null) return;
+
+	chrome.tabs.executeScript( {
+    	code: "window.getSelection().toString();"
+	}, function(selection) {
+		var selectedText = selection[0];
+		background.addKeyword({englishName:keywordName, translations: [selectedText]}, null, function(response){
+			console.log("Got a response: ", response);
+		});
+	});
+}
+
+
+function menuAddKeyword(){
+
+	chrome.tabs.executeScript( {
+    	code: "window.getSelection().toString();"
+	}, function(selection) {
+		var selectedText = selection[0];
+		background.addKeyword({englishName: selectedText, translations: []}, null, function(response){
+			console.log("Got a response: ", response);
+		});
+	});
+}
+
+function menuAddSearch() {
+
+	do{
+		searchName = prompt("Name your new search: ");
+	} while(searchName != null && !searchName.trim().match(ENGLISH_REGEX))
+
+	if(searchName == null) return;
+
+	chrome.tabs.executeScript( {
+    	code: "window.getSelection().toString();"
+	}, function(selection) {
+		var selectedText = selection[0];
+		background.addFavoriteSearch({name:searchName, query: selectedText}, null, function(response){
+			console.log("Got a response: ", response);
+		});
+	});
+}
+
+function sendSearch(search) {
+	alert(search);
 }
 
 function createContextMenus() {
+
 	chrome.contextMenus.create({
-		 title: "Add \"%s\" as new keyword...",
-			contexts:["selection"],  // ContextType
-		 onclick: contextMenuHandle
+		title: "Open Dictionary",
+			contexts:["all"],  
+		 onclick: menuOpenOptions
+	});
+
+
+	chrome.contextMenus.create({
+		 title: "Add \"%s\" as new keyword",
+			contexts:["selection"],  
+		 onclick: menuAddKeyword
 	});
 
 	chrome.contextMenus.create({
-		 title: "Add \"%s\" as translation...",
-			contexts:["selection"],  // ContextType
-		 onclick: contextMenuHandle
+		 title: "Add \"%s\" as translation for keyword...",
+			contexts:["selection"],  
+		 onclick: menuAddTranslation
 	});
 
 	chrome.contextMenus.create({
-		title: "Open Ki Dictionary",
-			contexts:["all"],  // ContextType
-		 onclick: openOptionsTab
+			 title: "Save as favorite search...",
+			contexts:["selection"],  
+			 onclick: menuAddSearch
 	});
+
 }
 
 
 function setDictionary(dict) {
 	dictionary = dict;
-};
+}
+
+function setFavoriteSearches(searches) {
+	favoriteSearches = searches;
+}
 
 
 function addQuotes(str) {
@@ -157,7 +275,7 @@ function addQuotes(str) {
 }
 
 // creates a size x size 2D array with
-// boolean valuesset to false
+// boolean values set to false
 function createTruthTable(size) {
 	var arr = []
 	for(var i = 0; i< size; i++) {
@@ -197,10 +315,10 @@ function populateTruthTable(table, spaceIndexes, numWords, query) {
 			else
 				wordEnd = spaceIndexes[j]
 
-			if(rowStart === j)
-					word = query.substring(wordStart, wordEnd);
-				else
-					word = addQuotes(query.substring(wordStart, wordEnd));
+
+
+			word = query.substring(wordStart, wordEnd);
+
 
 			table[rowStart][j] = !(dictionary.keywords[word] === undefined);
 			//console.log("(" + rowStart + "," + j + ") - Is " + word + " in the dictionary?: " + !(dictionary.keywords[word] === undefined));
@@ -212,7 +330,6 @@ function populateTruthTable(table, spaceIndexes, numWords, query) {
 		colStart++;
 	}
 
-	//console.log(table);
 }
 
 
@@ -229,6 +346,8 @@ function createTranslationGroup(word, collapse) {
 
 	if(translations === undefined) return "";
 
+	if(word.includes(" "))
+		word = addQuotes(word);
 	var segments = [word];
 	for(var i = 0; i< translations.length; i++) {
 		var seg = translations[i];
@@ -323,7 +442,7 @@ function translateQuerySegment(query, collapse) {
 	}
 
 
-	//console.log("Translating: [" + query + "]");
+	console.log("Translating: [" + query + "]");
 
 	var numWords = spaceCount +1;
 	var translationTable = createTruthTable(numWords);
@@ -347,10 +466,7 @@ function translateQuerySegment(query, collapse) {
 				else
 					wordEnd = query.length;
 
-				if(i === j)
 					word = query.substring(wordStart, wordEnd);
-				else
-					word = addQuotes(query.substring(wordStart, wordEnd));
 
 				translationGroups.push(createTranslationGroup(word, collapse));  //creates translation group for block
 				var m = Math.max(i,j);
@@ -395,8 +511,9 @@ function translateQuery(query) {
 }
 
 
-var dictionary;
+var dictionary, favoriteSearches;
 
 //chrome.storage.sync.remove("mainDictionary");
+//chrome.storage.sync.remove("favoriteSearches");
 
 background.init();

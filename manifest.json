@@ -2,7 +2,7 @@
   "name": "Ki",
   "version": "0.0.1",
   "manifest_version": 2,
-  "description": "Manage translations for English keywords and easily construct more detailed search queries for Yahoo Auctions.",
+  "description": "Manage translations for English keywords and easily construct more detailed search queries on Yahoo Auctions.",
   "homepage_url": "http://auctions.yahoo.co.jp",
   "icons": {
     "16": "icons/temporaryicon16.png",
@@ -55,6 +55,5 @@
         "src/inject/inject.js"
       ]
     }
-  ],
-  "web_accessible_resources": ["script.js"]
+  ]
 }

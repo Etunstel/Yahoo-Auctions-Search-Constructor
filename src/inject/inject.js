@@ -1,7 +1,7 @@
 
-
-
 KANJIKANA_REGEX = /[\u3000-\u303F]|[\u3040-\u309F]|[\u30A0-\u30FF]|[\uFF00-\uFFEF]|[\u4E00-\u9FAF]|[\u2605-\u2606]|[\u2190-\u2195]|\u203B/g;
+
+
 
 
 	document.addEventListener("keydown", function(evt){
@@ -17,7 +17,7 @@ KANJIKANA_REGEX = /[\u3000-\u303F]|[\u3040-\u309F]|[\u30A0-\u30FF]|[\uFF00-\uFFE
 		var searchBar = document.getElementById("yschsp");
 		var search = searchBar.value;
 
-		if(searchBar.value === "") return;
+		if(!searchBar.value || 0 === searchBar.value.length) return;
 
 		if(KANJIKANA_REGEX.test(search)){
 
@@ -25,11 +25,9 @@ KANJIKANA_REGEX = /[\u3000-\u303F]|[\u3040-\u309F]|[\u30A0-\u30FF]|[\uFF00-\uFFE
 			return;
 		}
 
-		chrome.runtime.sendMessage({fn: "translate",  query: searchBar.value}, function(response) {
+		chrome.runtime.sendMessage({fn: "translate",  query: searchBar.value.toLowerCase()}, function(response) {
     			searchBar.value = response;
 		});
 
 	}
-
-
 
