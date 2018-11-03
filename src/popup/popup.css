@@ -54,11 +54,6 @@ body{
     border-radius:4px;
 }
 
-
-
-
-
-
 .tooltip{
     position:relative;
     border-bottom: 1px dotted black;
@@ -98,15 +93,16 @@ body{
 
 
 .favorite-search{
-    display:inline-block;
-	color:white;
-	font-weight:bold;
+	color: white;
+	font-weight: bold;
 	background-color:#333;
 	cursor: pointer;
 	display:block;
 	padding: 12px;
 	margin:2px;
 	border-radius:5px;
+    line-height: 2;
+    font-size:1em;
 }
 
 
@@ -125,4 +121,14 @@ body{
 .favorite-search.placeholder:hover {
     background-color:#333;
     color:white;
+}
+
+.delete-button{
+    display:inline-block;
+    font-weight: bold;
+    float:right;
+    vertical-align: middle;
+    color: #33322f;
+    cursor:pointer;
+    padding:0;
 }

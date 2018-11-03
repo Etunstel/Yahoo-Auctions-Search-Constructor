@@ -24,7 +24,6 @@ function SearchList(name){
 var background = {
 
 	addKeyword : function(request, sender, sendResponse) {
-		//console.log("Adding " + request.englishName)
 		if(dictionary.keywords[request.englishName] === undefined) {
 			dictionary.keywords[request.englishName] = request.translations;
 			this.saveDictionary({dict: dictionary});
@@ -63,14 +62,14 @@ var background = {
 	saveDictionary : function(request, sender, sendResponse) {
 		chrome.storage.sync.set({"mainDictionary": request.dict}, function() {
 			dictionary = request.dict;
-			console.log("Dictionary Saved.");
+			//console.log("Dictionary Saved.");
 		});
 	},
 
 	saveFavoriteSearches: function(request, sender, sendResponse) {
 		chrome.storage.sync.set({"favoriteSearches": request.searches}, function() {
 			favoriteSearches = request.searches;
-			console.log("Searches Saved.");
+			//console.log("Searches Saved.");
 		});
 	},
 
@@ -82,7 +81,7 @@ var background = {
 			setDictionary(new Dictionary("Main Dictionary"));
 		}
 		else {
-			console.log("Dictionary loaded.");
+			//console.log("Dictionary loaded.");
 			setDictionary(test);
 		}
 		});
@@ -111,7 +110,7 @@ var background = {
 			setFavoriteSearches(new SearchList("Favorite Searches"));
 		}
 		else {
-			console.log("Saved Searches loaded.");
+			//console.log("Saved Searches loaded.");
 			setFavoriteSearches(test);
 		}
 		});
@@ -166,6 +165,17 @@ var background = {
 
 		});
 
+		chrome.commands.onCommand.addListener(function(command){
+			if(command == "translate-search"){
+
+				chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+
+					chrome.tabs.sendMessage(tabs[0].id, {command: command});
+
+				});
+			}
+		});
+
 	},
 };
 
@@ -181,7 +191,7 @@ function menuOpenOptions(){
 function menuAddTranslation() {
 
 	do{
-		keywordName = prompt("Add selection as translation for: ");
+		keywordName = window.prompt("Add selection as translation for: ");
 	} while(keywordName != null && !keywordName.trim().match(ENGLISH_REGEX)
 								&& !keywordName.trim().match(SPACED_KEYWORD_REGEX))
 	if(keywordName == null) return;
@@ -212,7 +222,7 @@ function menuAddKeyword(){
 function menuAddSearch() {
 
 	do{
-		searchName = prompt("Name your new search: ");
+		searchName = window.prompt("Name your new search: ");
 	} while(searchName != null && !searchName.trim().match(ENGLISH_REGEX))
 
 	if(searchName == null) return;
@@ -225,10 +235,6 @@ function menuAddSearch() {
 			console.log("Got a response: ", response);
 		});
 	});
-}
-
-function sendSearch(search) {
-	alert(search);
 }
 
 function createContextMenus() {
@@ -441,8 +447,6 @@ function translateQuerySegment(query, collapse) {
 		}
 	}
 
-
-	console.log("Translating: [" + query + "]");
 
 	var numWords = spaceCount +1;
 	var translationTable = createTruthTable(numWords);

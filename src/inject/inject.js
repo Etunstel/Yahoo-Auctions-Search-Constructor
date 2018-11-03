@@ -3,13 +3,10 @@ KANJIKANA_REGEX = /[\u3000-\u303F]|[\u3040-\u309F]|[\u30A0-\u30FF]|[\uFF00-\uFFE
 
 
 
-
-	document.addEventListener("keydown", function(evt){
-
-		if (evt.ctrlKey && evt.keyCode == 32) {
+	chrome.runtime.onMessage.addListener(function(message){
+		if(message.command== "translate-search"){
 			translateSearch();
 		}
-
 	});
 
 
@@ -26,8 +23,8 @@ KANJIKANA_REGEX = /[\u3000-\u303F]|[\u3040-\u309F]|[\u30A0-\u30FF]|[\uFF00-\uFFE
 		}
 
 		chrome.runtime.sendMessage({fn: "translate",  query: searchBar.value.toLowerCase()}, function(response) {
-    			searchBar.value = response;
+			searchBar.select();
+			document.execCommand("insertText", false, response);
 		});
 
 	}
-

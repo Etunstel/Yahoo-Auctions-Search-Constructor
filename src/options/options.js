@@ -22,7 +22,7 @@ function isEmpty(obj) {
 }
 
 function validateEnglishInput(cell){
-	var text = cell.innerHTML;
+	var text = cell.data;
 	 if(!ENGLISH_REGEX.test(text)){
 		cell.classList.toggle("input-error");
 		return false;
@@ -205,7 +205,7 @@ function addTableRow(table, englishName, keywords) {
    table.tBodies[0].appendChild(newRow);
 
    deleteTD.addEventListener('click', function(event){
-		if(confirm("Delete keyword " + englishTD.innerHTML + "?")) {
+		if(confirm("Delete keyword " + englishTD.textContent + "?")) {
 		  deleteRow(table, this.parentNode);
 		}
    })
@@ -214,7 +214,7 @@ function addTableRow(table, englishName, keywords) {
 // deletes table row and removes the keyword from the (local) dictionary
 function deleteRow(table, row) {
 	var englishTD = row.firstElementChild;
-	var englishName = englishTD.innerHTML;
+	var englishName = englishTD.textContent;
 	var tableBody = table.firstChild;
 
 	var placeHolder = document.getElementById("table-placeholder");
@@ -394,7 +394,7 @@ function saveDictionaryChanges() {
 	for (var i = 0; i < rows.length; i++) {
 	  var row = rows[i];
 	  var englishTD = row.children[0];
-	  var englishName = englishTD.innerHTML.toLowerCase().replace(/;&nbsp/g, "");
+	  var englishName = englishTD.textContent.toLowerCase().replace(/;&nbsp/g, "").trim();
 
 	  var keywords = row.children[1].innerHTML.split(",");
 	  d.keywords[englishName] = keywords;
@@ -416,6 +416,17 @@ function reloadDictionary(table, callback) {
   });
 }
 
+/*
+TODO: Export/Import dictionaries to/from .json
+function exportDictionary() {
+     var dict  =  "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dictionary));
+     var dllink  = document.createElement("a");
+     dllink.href = "data:" + dict;
+     dllink.download = "dictionary.json";
+     dllink.click();
+}
+*/
+
 
 
 function init() {
@@ -426,6 +437,7 @@ function init() {
 	  var table = document.getElementById("keywordTable");
 	  var saveButton = document.getElementById("save-button");
 	  var addButton = document.getElementById("add-button");
+	  var dlButton = document.getElementById("dl-button");
 
 	  saveButton.addEventListener("click", function(event){
 		saveDictionaryChanges();
@@ -435,6 +447,7 @@ function init() {
 		addTableRow(keywordTable, "New Keyword", []);
 		scrollDown(keywordTable);
 	  })
+
 
 	  reloadDictionary(table, populateTable);
   });

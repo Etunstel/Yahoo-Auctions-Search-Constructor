@@ -24,8 +24,7 @@
     "clipboardWrite",
     "contextMenus",
     "storage",
-    "tabs",
-    "http://auctions.search.yahoo.co.jp/"
+    "*://*.auctions.yahoo.co.jp/*"
   ],
 
 "browser_action": {
@@ -41,19 +40,20 @@
   "content_scripts": [
     {
       "matches": [
-        "http://auctions.search.yahoo.co.jp/*",
-        "http://auctions.yahoo.co.jp/*",
-        "http://*.auctions.search.yahoo.co.jp/*",
-        "https://auctions.search.yahoo.co.jp/*",
-        "https://auctions.yahoo.co.jp/*",
-        "https://*.auctions.search.yahoo.co.jp/*"
-      ],
-      "css": [
-        "src/inject/inject.css"
+        "*://*.auctions.yahoo.co.jp/*"
       ],
       "js": [
         "src/inject/inject.js"
       ]
     }
-  ]
+  ],
+  "commands": {
+    "translate-search": {
+        "suggested_key": {
+          "default": "Ctrl+Space",
+          "mac": "Ctrl+Space"
+          },
+        "description": "Translate search query"
+    }
+  }
 }
