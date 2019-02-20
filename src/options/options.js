@@ -5,10 +5,18 @@ var SINGLE_KEYWORD_REGEX = /^([^"':;\s]+)$/;
 var SPACED_KEYWORD_REGEX = /^(^"[^"':;\s]+(?:\s+[^"':;\s]+)+")$/;
 var ENGLISH_REGEX = /^(^[^"':;\s]+(?:\s+[^"':;\s]+)*)$/;
 
-
 function Dictionary(title) {
 	this.title = title;
 	this.keywords = {};
+}
+
+function Keyword(englishName, translations, category) {
+		this.englishName = englishName;
+		this.translations = translations;
+		if(category)
+			this.category = category;
+		else
+			this.category = "Uncategorized";
 }
 
 function isEmpty(obj) {
@@ -21,12 +29,15 @@ function isEmpty(obj) {
 	return true;
 }
 
+
 function validateEnglishInput(cell){
-	var text = cell.data;
+	const text = cell.textContent;
+
 	 if(!ENGLISH_REGEX.test(text)){
 		cell.classList.toggle("input-error");
 		return false;
 	  }
+
 	  return true;
 }
 
@@ -35,7 +46,7 @@ function validateEnglishInput(cell){
 // is editable until a valid word/phrase is entered.
 function makeEnglishEditable(cell){
 
-	var saveButton = document.getElementById("save-button");
+	const saveButton = document.getElementById("save-button");
 	saveButton.disabled = true;
 	cell.contentEditable = true;
 
@@ -79,13 +90,14 @@ function makeEnglishEditable(cell){
 }
 
 // Converts keyword tags into a comma-separated list of keywords.
-function makeTranslationsUneditable(cell) {
+function makeTranslationsUneditable(table, cell) {
 
-	var outer = cell.firstChild;
-	var enteredWords = outer.firstChild;
-	var tags = Array.from(enteredWords.getElementsByClassName("keyword-tag"));
-	var names = [];
-	var inputErrors = document.getElementsByClassName("input-error");
+	const outer = cell.firstChild;
+	const enteredWords = outer.firstChild;
+	const tags = Array.from(enteredWords.getElementsByClassName("keyword-tag"));
+	const inputErrors = table.getElementsByClassName("input-error");
+
+	let names = [];
 
 	for(tag in tags) {
 	  names.push(tags[tag].firstChild.innerHTML);
@@ -93,7 +105,7 @@ function makeTranslationsUneditable(cell) {
 	cell.innerHTML = names.join(",");
 	cell.classList.remove("editing");
 
-	var saveButton = document.getElementById("save-button");
+	const saveButton = document.getElementById("save-button");
 	if(inputErrors.length === 0)
 	  saveButton.disabled = false;
 }
@@ -101,26 +113,26 @@ function makeTranslationsUneditable(cell) {
 
 //  Turns table data into a list of keyword tags and adds a text box for
 //  entering more keywords.
-function makeTranslationsEditable(cell) {
+function makeTranslationsEditable(table, cell) {
 
 	if(cell.classList.contains("editing"))
 	  return;
 
-	var saveButton = document.getElementById("save-button");
+	const saveButton = document.getElementById("save-button");
 	saveButton.disabled = true;
 
 	cell.classList.add("editing");
-	var keywords = cell.innerHTML.trim().split(",");
+	const keywords = cell.innerHTML.trim().split(",");
 
-	var translOuter = document.createElement("span");
+	const translOuter = document.createElement("span");
 	translOuter.classList.add("translation-outer");
 	translOuter.classList.add("edit-box")
 
-	var enteredWords = document.createElement("span");
+	const enteredWords = document.createElement("span");
 	enteredWords.id = "enteredWords";
 	enteredWords.class = "keyword-container";
 
-	var addBox = document.createElement("input");
+	const addBox = document.createElement("input");
 	addBox.type = "text";
 	addBox.id = "translationaddbox";
 
@@ -143,7 +155,7 @@ function makeTranslationsEditable(cell) {
 
 	addBox.addEventListener("blur", function(evt) {
 		validateInput(addBox, enteredWords);
-		makeTranslationsUneditable(cell);
+		makeTranslationsUneditable(table, cell);
 	});
 
 	addBox.addEventListener("focusin", function(){
@@ -153,7 +165,7 @@ function makeTranslationsEditable(cell) {
 
 
 	for(i in keywords) {
-	  var tag = createKeywordTag(keywords[i]);
+	  let tag = createKeywordTag(keywords[i]);
 	  if(tag!=null)
 		enteredWords.appendChild(tag);
 	}
@@ -167,10 +179,12 @@ function makeTranslationsEditable(cell) {
 	addBox.focus();
 }
 
-function addTableRow(table, englishName, keywords) {
-   var newRow = document.createElement("tr");
-   var englishTD = document.createElement("td");
-   var placeHolder = document.getElementById("table-placeholder");
+function addTableRow(englishName, translations, category) {
+  let table = document.getElementById("keyword-table");
+
+   let newRow = document.createElement("tr");
+   let englishTD = document.createElement("td");
+   let placeHolder = table.getElementsByClassName("table-placeholder")[0];
 
    if(placeHolder!=null){
 	  placeHolder.parentNode.removeChild(placeHolder);
@@ -181,11 +195,11 @@ function addTableRow(table, englishName, keywords) {
 
    englishTD.innerHTML = englishName;
 
-   var japaneseTD = document.createElement("td");
-   japaneseTD.innerHTML = keywords.join(",");
+   let japaneseTD = document.createElement("td");
+   japaneseTD.innerHTML = translations.join(",");
    japaneseTD.classList.add("translation-column");
 
-   var deleteTD = document.createElement("td");
+   let deleteTD = document.createElement("td");
    deleteTD.classList.add("delete-column");
    deleteTD.innerHTML = "\u2a2f";
 
@@ -193,82 +207,179 @@ function addTableRow(table, englishName, keywords) {
    newRow.appendChild(japaneseTD);
    newRow.appendChild(deleteTD);
    newRow.classList.add("keyword-row");
+   newRow.setAttribute("data-category", category);
 
    japaneseTD.addEventListener('click',  function(event) {
    	if (!window.getSelection().toString()) //nothing highlighted
-	  	makeTranslationsEditable(this);
+	  	makeTranslationsEditable(table, this);
    })
 
-   if(keywords.length ===0 )
-	  makeEnglishEditable(englishTD);
-
-   table.tBodies[0].appendChild(newRow);
-
-   deleteTD.addEventListener('click', function(event){
+    deleteTD.addEventListener('click', function(event){
 		if(confirm("Delete keyword " + englishTD.textContent + "?")) {
-		  deleteRow(table, this.parentNode);
+		  deleteRow(table, this.parentNode, true);
 		}
    })
+
+
+    newRow.addEventListener("transitionend", function(event){
+    	newRow.parentNode.removeChild(newRow);
+
+		const inputErrors = table.getElementsByClassName("input-error");
+
+		let category = newRow.getAttribute("data-category");
+		let x = categoryAmounts.get(category);
+		x--;
+		categoryAmounts.set(category, x);
+		if(x===0)
+			showPlaceHolder();
+
+		const saveButton = document.getElementById("save-button");
+		if(saveButton.disabled && inputErrors.length===0)
+		  saveButton.disabled =false;
+    })
+
+    englishTD.setAttribute("draggable", "true");
+
+    englishTD.addEventListener("dragstart", function(evt) {
+    	rowDragStartHandler(evt);
+    })
+
+   if(translations.length ===0 )
+	  makeEnglishEditable(englishTD);
+
+	let x = categoryAmounts.get(category);
+
+	if(x==0)
+		hidePlaceHolder();
+	x++;
+	categoryAmounts.set(category, x);
+
+   table.tBodies[0].appendChild(newRow);
 }
 
 // deletes table row and removes the keyword from the (local) dictionary
-function deleteRow(table, row) {
-	var englishTD = row.firstElementChild;
-	var englishName = englishTD.textContent;
-	var tableBody = table.firstChild;
+function deleteRow(table, row, deleteKeyword) {
 
-	var placeHolder = document.getElementById("table-placeholder");
+	let englishTD = row.firstElementChild;
+	let englishName = englishTD.textContent.toLowerCase();
+	let tableBody = table.firstChild;
 
-	delete dictionary.keywords[englishName];
 
-	row.style.opacity = 0;
+	if(deleteKeyword)
+		delete dictionary.keywords[englishName];
 
-	setTimeout(function(){
+	row.style.opacity = 0; //transitionend listener will remove row from table
+}
 
-	row.parentNode.removeChild(row);
+function setCategory(row, newCategory) {
 
-	var keyRows = document.getElementsByClassName("keyword-row");
-	var inputErrors = document.getElementsByClassName("input-error");
+	row.setAttribute("data-category", newCategory);
 
-	 if(keyRows.length === 0) // empty table
-		  addTablePlaceHolder(table);
-
-	var saveButton = document.getElementById("save-button");
-	if(saveButton.disabled && inputErrors.length===0)
-	  saveButton.disabled =false;
-	}, 500);
 }
 
 
-function addTablePlaceHolder(table) {
-	 var newRow = document.createElement("tr");
-	 var td = document.createElement("td");
-	 td.colSpan = 3;
-	 td.innerHTML = "No keywords exist yet!"
-	 td.classList.add("table-placeholder");
-	 td.id = "table-placeholder";
-	 newRow.appendChild(td);
-	 table.tBodies[0].appendChild(newRow);
+function rowDragStartHandler(event) {
+	var row = event.target.parentNode;
+	var rowIndex = Array.from(row.parentNode.children).indexOf(row);
 
+	var data = {rowIndex: rowIndex, originCategory: row.getAttribute("data-category")};
+	event.dataTransfer.effectAllowed = "move";
+	event.dataTransfer.setData("text/plain", JSON.stringify(data));
+	event.dataTransfer.setDragImage(event.target, 0, 0);
 }
 
-function populateTable(table, dictionary){
-  if(isEmpty(dictionary.keywords)) {
-	 addTablePlaceHolder(table);
-  } else {
-	  var names = Object.keys(dictionary.keywords);
+
+
+function categoryDragOverHandler(event) {
+	event.preventDefault();
+	event.dataTransfer.dropEffect = "move";
+}
+
+function categoryDropHandler(event) {
+
+	const categoryButton = event.target;
+	const table = document.getElementById("keyword-table");
+	var data;
+	try{
+		data = JSON.parse(event.dataTransfer.getData("text/plain"));
+	} catch(error){
+		return;
+	}
+
+	const draggedRow = table.tBodies[0].childNodes[data.rowIndex+1];
+
+	let newCategory = categoryButton.getAttribute("data-category");
+	let oldCategory = draggedRow.getAttribute("data-category");
+
+	if(newCategory===oldCategory) return;
+
+	if(newCategory === "All")
+		newCategory = "Uncategorized";
+
+
+	setCategory(draggedRow, newCategory);
+	draggedRow.style.display = "none";
+
+	categoryAmounts.set(newCategory, categoryAmounts.get(newCategory)+1);
+	categoryAmounts.set(oldCategory, categoryAmounts.get(oldCategory)-1);
+
+	if(categoryAmounts.get(oldCategory)==0)
+		showPlaceHolder();
+}
+
+
+function showPlaceHolder() {
+
+	let placeholder = document.getElementById("placeholder-row");
+
+	placeholder.style.display = "";
+}
+
+function hidePlaceHolder() {
+	let placeholder = document.getElementById("placeholder-row");
+
+	placeholder.style.display = "none";
+}
+
+
+
+// populateTables
+function populateTable(dictionary){
+  if(!(isEmpty(dictionary) ||isEmpty(dictionary.keywords))) {
+
+	  let names = Object.keys(dictionary.keywords);
 	  names.sort(function(a,b){
 	  	a2 = a.replace(/["]/g, "");
 	  	b2 = b.replace(/["]/g, "");
 	  	return a2.localeCompare(b2);});
+
+
 	  names.forEach(function(key,index) {
-		addTableRow(table, key, dictionary.keywords[key]);
+
+	  	let kw = dictionary.keywords[key];
+
+	  	if(!categoryAmounts.has(kw.category)) {
+	  		categoryAmounts.set(kw.category, 0);
+	  	}
+
+	  	addTableRow(kw.englishName, kw.translations, kw.category);
+
 	});
+	  hidePlaceHolder();
+  } else {
+  	showPlaceHolder();
   }
 }
 
+
+
+function scrollUp(table) {
+	const container = table.parentNode;
+	container.scrollTop = 0;
+}
+
 function scrollDown(table) {
-	var container = table.parentNode;
+	const container = table.parentNode;
 	container.scrollTop = container.scrollHeight;
 }
 
@@ -277,13 +388,13 @@ function createKeywordTag(text) {
 
   if(text === "") return null;
 
-  var tag = document.createElement("span");
+  const tag = document.createElement("span");
   tag.classList.add("keyword-tag");
 
-  var tagText =  document.createElement("span");
+  const tagText =  document.createElement("span");
   tagText.innerHTML= text;
 
-  var removeButton = document.createElement("span");
+  const removeButton = document.createElement("span");
   removeButton.innerHTML = "\u2a2f";
   removeButton.classList.add("keyword-delete");
 
@@ -302,13 +413,13 @@ function createKeywordTag(text) {
 }
 
 function validateInput(textBox, keywordArea){
-	  var currText = textBox.value.trim();
+	  let currText = textBox.value.trim();
 	  currText = currText.replace(/&nbsp;|<div>|<br>|<\/div>/g, "");
 
 	  if(currText.match(SINGLE_KEYWORD_REGEX)){ //single keyword entry
 
 		currText = currText.replace(/["]/g, '');
-		var textNode = createKeywordTag(currText);
+		const textNode = createKeywordTag(currText);
 
 		if(textNode != null)
 		  keywordArea.appendChild(textNode);
@@ -316,7 +427,7 @@ function validateInput(textBox, keywordArea){
 		textBox.value = "";
 
 	  } else  { //pasted line, or multiple keywords
-		  var translations = getKeywordsIfValid(currText);
+		  const translations = getKeywordsIfValid(currText);
 
 		  if(translations === undefined){
 			return;
@@ -328,7 +439,7 @@ function validateInput(textBox, keywordArea){
 		  } else {
 
 			  for(i in translations) {
-				var textNode = createKeywordTag(translations[i]);
+				let textNode = createKeywordTag(translations[i]);
 				keywordArea.appendChild(textNode);
 			  }
 			  textBox.value = "";
@@ -341,15 +452,16 @@ function validateInput(textBox, keywordArea){
 // all keywords in the line. Returns an empty list if the line is invalid.
 function getKeywordsIfValid(line){
 	if(line === "") return undefined;
-	var quotesSplit = line.split("\"");
-	var validKeywords = [];
-	for (var i = 0; i < quotesSplit.length; i++) {
+	let quotesSplit = line.split("\"");
+	let validKeywords = [];
+
+	for (let i = 0; i < quotesSplit.length; i++) {
 		if(!(quotesSplit[i] === "")){
 		  if ((i % 2) == 0) {  //even entries contain space-separated single keywords
-			var singleWords = quotesSplit[i].replace(/\s{2,}/g, " "); //replace multi spaces
+			let singleWords = quotesSplit[i].replace(/\s{2,}/g, " "); //replace multi spaces
 			singleWords = singleWords.split(" ");
 
-			for (var j in singleWords){
+			for (let j in singleWords){
 			  if(singleWords[j] != "") {
 				if(!singleWords[j].match(KEYTAG_REGEX)) {
 				  return []; //invalid single keyword
@@ -358,14 +470,14 @@ function getKeywordsIfValid(line){
 				}
 			  }
 		} else {//odd
-			var noMultis = quotesSplit[i].replace(/\s{2,}/g, " ");
+			let noMultis = quotesSplit[i].replace(/\s{2,}/g, " ");
 
 			if(noMultis.match(SINGLE_KEYWORD_REGEX)) {
 			  return [];
 			}
-			var singleWords = noMultis.split(" ");
+			let singleWords = noMultis.split(" ");
 
-			for (var j in singleWords){
+			for (let j in singleWords){
 			  if(!singleWords[j].match(SINGLE_KEYWORD_REGEX)){
 				return [];
 			  }
@@ -378,46 +490,92 @@ function getKeywordsIfValid(line){
 	return validKeywords;
 }
 
+function addNewCategory(){
 
+	var categoryName;
 
-function saveDictionaryChanges() {
+	do{
+		categoryName = window.prompt("Name your category: ");
+	} while(categoryName != null && !categoryName.trim().match(ENGLISH_REGEX)
+								&& !categoryName.trim().match(SPACED_KEYWORD_REGEX))
+	if(categoryName == null) return;
+	if(categoryName == "All" || categories.includes(categoryName)) {
+		alert("Category Already Exists!")
+		return;
+	}
 
-	document.activeElement.blur();
+	categories.push(categoryName);
+	addCategoryButton(categoryName);
+}
 
-	var d = new Dictionary("Main Dictionary");
-	var table = document.getElementById("keywordTable")
-	var tableBody = table.tBodies[0];
+function deleteActiveCategory(keepKeywords) {
 
-	var rows = document.querySelectorAll("tr.keyword-row")
+	const categoryButtons = document.getElementById("category-buttons");
+	console.log(categoryButtons);
+	for(let i = 0; i< categories.length; i++)
+		if(categories[i]===activeCategory)
+			categories.splice(i,1);
 
+	for(let i = 1; i< categoryButtons.childNodes.length; i++) {
+		if(categoryButtons.childNodes[i].getAttribute("data-category")===activeCategory) {
+			categoryButtons.removeChild(categoryButtons.childNodes[i]);
+			break;
+		}
+	}
 
-	for (var i = 0; i < rows.length; i++) {
-	  var row = rows[i];
-	  var englishTD = row.children[0];
-	  var englishName = englishTD.textContent.toLowerCase().replace(/;&nbsp/g, "").trim();
+	if(categoryAmounts.get(activeCategory)>0) {
+		const table = document.getElementById("keyword-table");
+		const rows = table.tBodies[0].getElementsByClassName("keyword-row");
 
-	  var keywords = row.children[1].innerHTML.split(",");
-	  d.keywords[englishName] = keywords;
+		let toRemove = [];
+		for(let i = 0; i< rows.length; i++) {
+			let rowCat = rows[i].getAttribute("data-category");
+			if(rowCat===activeCategory) {
+				if(keepKeywords) {
+					setCategory(rows[i], "Uncategorized");
+					categoryAmounts.set("Uncategorized", categoryAmounts.get("Uncategorized")+1);
+				} else {
+					toRemove.push(rows[i]);
+				}
+			}
+		}
+
+		toRemove.forEach(function(key,index) {
+			table.tBodies[0].removeChild(key);
+		});
 	}
 
 
-	dictionary = d;
+	categoryAmounts.delete(activeCategory);
 
-
-	chrome.runtime.sendMessage({fn: "saveDictionary", dict: d});
+	showCategory("All");
 }
 
-function reloadDictionary(table, callback) {
-  chrome.runtime.sendMessage({fn: "getDictionary"}, function(response){
+function addCategoryButton(category) {
+	let menu = document.getElementById("category-buttons");
 
-	dictionary = response;
-	callback(table, response);
+	let newButton = document.createElement("button");
 
-  });
+	newButton.classList.add("category-button");
+	newButton.setAttribute("data-category", category);
+	newButton.innerHTML = category;
+
+	newButton.addEventListener("click", function(event) {
+		showCategory(category);
+	});
+
+	newButton.addEventListener("dragover", function(evt) {categoryDragOverHandler(evt)});
+
+	newButton.addEventListener("drop", function(evt) {categoryDropHandler(evt)});
+
+	menu.appendChild(newButton);
+	if(!categoryAmounts.has(category))
+		categoryAmounts.set(category, 0);
 }
 
-/*
-TODO: Export/Import dictionaries to/from .json
+
+
+//TODO: Export/Import dictionaries to/from .json
 function exportDictionary() {
      var dict  =  "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dictionary));
      var dllink  = document.createElement("a");
@@ -425,35 +583,202 @@ function exportDictionary() {
      dllink.download = "dictionary.json";
      dllink.click();
 }
-*/
 
 
+
+// Switches visible tab based on which menu section is clicked
+function showMenuView(btn, id) {
+
+	const views = document.getElementsByClassName("tabContent");
+	const buttons = document.getElementsByClassName("tabButton");
+
+	for(let i = 0; i< views.length; i++){
+		views[i].style.display = "none";
+	}
+
+
+	for(let i = 0; i< views.length; i++)
+		buttons[i].className = buttons[i].className.replace(" active", "");
+
+	document.getElementById(id).style.display = "block";
+	btn.classList.add("active");
+}
+
+
+// Switches visible Category table based on which category is clicked
+function showCategory(category){
+	const table = document.getElementById("keyword-table");
+	const rows = table.tBodies[0].getElementsByClassName("keyword-row");
+	const buttons = document.getElementsByClassName("category-button");
+
+	const delCatButton = document.getElementById("del-category-button");
+	const purgeCatButton = document.getElementById("purge-category-button");
+
+	for(let i = 0; i< buttons.length; i++) {
+		if(buttons[i].getAttribute("data-category") === category)
+			buttons[i].classList.add("active");
+		else
+			buttons[i].className = buttons[i].className.replace(" active", "");
+	}
+
+	for(let i = 0; i< rows.length; i++) {
+		let rowCat = rows[i].getAttribute("data-category");
+		if(category === "All" || (rowCat === category || category === null)) {
+			rows[i].style.display = "";
+		} else {
+			rows[i].style.display = "none";
+		}
+	}
+
+	if(category === "All" || category === "Uncategorized") {
+		if(!delCatButton.disabled) {
+			delCatButton.disabled=true;
+			purgeCatButton.disabled=true;
+		}
+	} else {
+		if(delCatButton.disabled) {
+			delCatButton.disabled=false;
+			purgeCatButton.disabled=false;
+		}
+	}
+
+
+	if((category === "All" && categoryAmounts.get("Uncategorized") === 0) ||categoryAmounts.get(category)===0)
+		showPlaceHolder();
+	else
+		hidePlaceHolder();
+
+	activeCategory = category;
+	scrollUp(table);
+}
+
+
+
+function saveDictionaryChanges() {
+
+	document.activeElement.blur();
+
+	let d = new Dictionary("Main Dictionary");
+	const table = document.getElementById("keyword-table");
+	const rows = table.tBodies[0].getElementsByClassName("keyword-row");
+
+
+	for (let j = 0; j < rows.length; j++) {
+		  let row = rows[j];
+
+		  let englishTD = row.children[0];
+
+		  let englishName = englishTD.textContent.replace(/;&nbsp/g, "").trim();
+
+		  let translations = row.children[1].innerHTML.split(",");
+
+		  let category = row.getAttribute("data-category");
+
+		  let keyword = new Keyword(englishName, translations, category);
+
+		  d.keywords[englishName.toLowerCase()] = keyword;
+	}
+
+	dictionary = d;
+
+	chrome.runtime.sendMessage({fn: "saveDictionary", dict: d});
+	chrome.runtime.sendMessage({fn: "saveCategories", categories: categories});
+}
+
+function reloadDictionary(callback) {
+  chrome.runtime.sendMessage({fn: "getDictionary"}, function(response){
+
+	dictionary = response;
+	callback(response);
+
+  });
+}
+
+function reloadCategories(callback) {
+	categoryAmounts = new Map();
+
+	chrome.runtime.sendMessage({fn: "getCategories"}, function(response){
+		categories = response;
+
+		for(let i = 0; i< categories.length; i++)
+			addCategoryButton(categories[i]);
+
+		callback;
+  	});
+
+}
+
+
+function initPageData() {
+	reloadCategories(reloadDictionary(populateTable));
+}
 
 function init() {
 
 	  document.addEventListener("DOMContentLoaded", function () {
 
-	  var keywordArea = document.getElementById("enteredWords");
-	  var table = document.getElementById("keywordTable");
-	  var saveButton = document.getElementById("save-button");
-	  var addButton = document.getElementById("add-button");
-	  var dlButton = document.getElementById("dl-button");
-
-	  saveButton.addEventListener("click", function(event){
-		saveDictionaryChanges();
-	  })
-
-	  addButton.addEventListener("click", function(event) {
-		addTableRow(keywordTable, "New Keyword", []);
-		scrollDown(keywordTable);
-	  })
+		  const table = document.getElementById("keyword-table");
 
 
-	  reloadDictionary(table, populateTable);
+		  const saveButton = document.getElementById("save-button");
+		  const addKWButton = document.getElementById("add-keyword-button");
+		  const addCatButton = document.getElementById("add-category-button");
+
+		  const allKWButton =  document.getElementById("all-button");
+		  const uncatButton = document.getElementById("uncat-button");
+		  const delCatButton = document.getElementById("del-category-button");
+		  const purgeCatButton = document.getElementById("purge-category-button");
+
+
+
+		  saveButton.addEventListener("click", function(event){
+			saveDictionaryChanges();
+		  })
+
+		  addKWButton.addEventListener("click", function(event) {
+			addTableRow("New Keyword", [], (activeCategory && !(activeCategory==="All")) ? activeCategory : "Uncategorized");
+			scrollDown(table);
+		  })
+
+		  addCatButton.addEventListener("click", function(event) {
+			addNewCategory()
+		  });
+
+		  allKWButton.addEventListener("click", function(event) {
+		  	showCategory("All")
+		  });
+
+		  uncatButton.addEventListener("click", function(event) {
+			showCategory("Uncategorized")
+		  });
+
+		  delCatButton.addEventListener("click", function(event) {
+		  	deleteActiveCategory(true);
+		  });
+
+		  purgeCatButton.addEventListener("click", function(event){
+		  	deleteActiveCategory(false);
+		  })
+
+		  allKWButton.addEventListener("dragover", function(evt) {categoryDragOverHandler(evt)});
+		  uncatButton.addEventListener("dragover", function(evt) {categoryDragOverHandler(evt)});
+
+		  allKWButton.addEventListener("drop", function(evt) {categoryDropHandler(evt)});
+		  uncatButton.addEventListener("drop", function(evt) {categoryDropHandler(evt)});
+
+
+		  const buttons = document.getElementsByClassName("tabButton");
+
+		  for(let i = 0; i< buttons.length; i++)
+			buttons[i].addEventListener("click", function(evt) {
+				showMenuView(this, this.getAttribute("data-view"));
+		   });
+
+		initPageData();
   });
 }
 
 //copy of dictionary in storage
-var dictionary;
+var dictionary, categories, activeCategory, categoryAmounts;
 
 init();

@@ -4,12 +4,6 @@
   "manifest_version": 2,
   "description": "Manage translations for English keywords and easily construct more detailed search queries on Yahoo Auctions.",
   "homepage_url": "http://auctions.yahoo.co.jp",
-  "icons": {
-    "16": "icons/temporaryicon16.png",
-    "19": "icons/temporaryicon19.png",
-    "48": "icons/temporaryicon48.png",
-    "128": "icons/temporaryicon128.png"
-  },
   "default_locale": "en",
   "background": {
     "scripts": [
@@ -24,6 +18,7 @@
     "clipboardWrite",
     "contextMenus",
     "storage",
+    "unlimitedStorage",
     "*://*.auctions.yahoo.co.jp/*"
   ],
 
@@ -51,7 +46,10 @@
     "translate-search": {
         "suggested_key": {
           "default": "Ctrl+Space",
-          "mac": "Ctrl+Space"
+          "windows": "Ctrl+Space",
+          "mac": "Ctrl+Space",
+          "chromeos": "Ctrl+Space",
+          "linux": "Ctrl+Space"
           },
         "description": "Translate search query"
     }

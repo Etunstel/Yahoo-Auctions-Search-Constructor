@@ -1,7 +1,4 @@
 
-
-//var console = chrome.extension.getBackgroundPage().console;
-var dictionary;
 var favorites;
 var popup = {
 

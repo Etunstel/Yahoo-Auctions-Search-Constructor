@@ -5,7 +5,7 @@ QUERY_REGEX = /(\([^\)\(]+\s[^\)\(]+\)|(?:[^\)\(\s]+\s?)+)/g
 // matches only OR searches: (keyword1 keyword2 keyword3)
 OR_SEARCH_REGEX = /\([^\)\(]+\s[^\)\(]+\)/;
 
-// matches only ND searches: keyword1 keyword2 keyword3
+// matches only AND searches: keyword1 keyword2 keyword3
 //AND_SEARCH_REGEX = /(?:[^\)\(\s]+\s?)+/;
 
 var SPACED_KEYWORD_REGEX = /^(^"[^"':;\s]+(?:\s+[^"':;\s]+)+")$/;
@@ -21,25 +21,37 @@ function SearchList(name){
 	this.searches = {};
 }
 
+function Keyword(englishName, translations) {
+		this.englishName = englishName;
+		this.translations = translations;
+		this.category = "Uncategorized";
+}
+
 var background = {
 
+	//Keywords are indexed by their lowercase englishnames
 	addKeyword : function(request, sender, sendResponse) {
-		if(dictionary.keywords[request.englishName] === undefined) {
-			dictionary.keywords[request.englishName] = request.translations;
+
+		const key = request.keyword.englishName.toLowerCase();
+		if(dictionary.keywords[key] === undefined) {
+			dictionary.keywords[key] = request.keyword;
 			this.saveDictionary({dict: dictionary});
 			sendResponse("Keyword updated");
 		} else {
-			temp = dictionary.keywords[request.englishName];
-			for(var i in request.translations) {
-				if(!temp.includes(request.translations[i])) temp.unshift(request.translations[i].toLowerCase());
+			const temp = dictionary.keywords[key];
+			const additions = request.keyword.translations;
+			for(let i in additions) {
+				if(!temp.translations.includes(additions[i]))
+					temp.translations.unshift(additions[i].toLowerCase());
 			}
-			dictionary.keywords[request.englishName] = temp;
+			dictionary.keywords[key] = temp;
 			this.saveDictionary({dict: dictionary});
 			sendResponse("Keyword modified");
 		}
 	},
 
 	removeKeyword: function(request, sender, sendResponse) {
+
 		if(dictionary.keywords[request.englishName] === undefined) {
 			sendResponse("Keyword does not exist");
 		} else {
@@ -47,44 +59,7 @@ var background = {
 			this.saveDictionary({dict: dictionary});
 			sendResponse("Keyword removed");
 		}
-	},
 
-	updateKeyword:  function(request, sender, sendResponse) {
-
-		if(!dictionary.keywords[request.englishName]) {
-			sendResponse("This keyword does not exist");
-		} else {
-			dictionary.keywords[request.englishName] = request.translations;
-			saveDictionary({dict: dictionary});
-		}
-	},
-
-	saveDictionary : function(request, sender, sendResponse) {
-		chrome.storage.sync.set({"mainDictionary": request.dict}, function() {
-			dictionary = request.dict;
-			//console.log("Dictionary Saved.");
-		});
-	},
-
-	saveFavoriteSearches: function(request, sender, sendResponse) {
-		chrome.storage.sync.set({"favoriteSearches": request.searches}, function() {
-			favoriteSearches = request.searches;
-			//console.log("Searches Saved.");
-		});
-	},
-
-	loadDictionary : function() {
-		chrome.storage.sync.get(["mainDictionary"], function(result) {
-
-		test = result["mainDictionary"];
-		if(!test || typeof test === undefined) {
-			setDictionary(new Dictionary("Main Dictionary"));
-		}
-		else {
-			//console.log("Dictionary loaded.");
-			setDictionary(test);
-		}
-		});
 	},
 
 	addFavoriteSearch: function(request, sender, sendResponse) {
@@ -103,15 +78,82 @@ var background = {
 		}
 	},
 
+	addCategory: function(request, sender, sendResponse) {
+		if(!categories.includes(request.category)) {
+			categories.unshift(request.category);
+			this.saveCategories({categories: categories});
+		}
+		if(sendResponse)
+			sendResponse("Search added/updated.");
+	},
+
+	removeCategory: function(request, sender, sendResponse) {
+		let found = false;
+		for(let i = 0; i< categories.length; i++) {
+				if(categories[i].equals(request.category)) {
+					found = true;
+					categories.splice(i,1);
+				}
+			}
+		if(found)
+			sendResponse("Category removed.");
+		else
+			sendResponse("Category does not exist.");
+	},
+
+	saveDictionary : function(request, sender, sendResponse) {
+		chrome.storage.local.set({"mainDictionary": request.dict}, function() {
+			dictionary = request.dict;
+		});
+	},
+
+	saveFavoriteSearches: function(request, sender, sendResponse) {
+		chrome.storage.local.set({"favoriteSearches": request.searches}, function() {
+			favoriteSearches = request.searches;
+		});
+	},
+
+	saveCategories: function(request, sender, sendResponse) {
+		chrome.storage.local.set({"categories": request.categories}, function() {
+			categories = request.categories;
+		});
+	},
+
+	loadDictionary : function() {
+		chrome.storage.local.get(["mainDictionary"], function(result) {
+
+		const test = result["mainDictionary"];
+		if(!test || typeof test === undefined) {
+			setDictionary(new Dictionary("Main Dictionary"));
+		}
+		else {
+			setDictionary(test);
+		}
+		});
+	},
+
 	loadFavoriteSearches: function() {
-		chrome.storage.sync.get(["favoriteSearches"], function(result) {
-		test = result["favoriteSearches"]
+		chrome.storage.local.get(["favoriteSearches"], function(result) {
+		const test = result["favoriteSearches"]
 		if(!test || typeof test === undefined) {
 			setFavoriteSearches(new SearchList("Favorite Searches"));
 		}
 		else {
-			//console.log("Saved Searches loaded.");
 			setFavoriteSearches(test);
+		}
+		});
+	},
+
+	loadCategories : function() {
+		chrome.storage.local.get(["categories"], function(result) {
+
+		const test = result["categories"];
+		if(!test || typeof test === undefined) {
+			setCategories([]);
+		}
+		else {
+			console.log("Categories loaded.");
+			setCategories(test);
 		}
 		});
 	},
@@ -121,7 +163,7 @@ var background = {
 	},
 
 	clearDictionary: function(request, sender, sendResponse) {
-		var d = new Dictionary("Main Dictionary");
+		const d = new Dictionary("Main Dictionary");
 		dictionary = d;
 		this.saveDictionary({dict:dictionary});
 		sendResponse("Dictionary removed")
@@ -132,17 +174,27 @@ var background = {
 	},
 
 	clearFavoriteSearches: function(request, sender, sendResponse) {
-		var newFavorites = new SearchList("Favorite Searches");
+		const newFavorites = new SearchList("Favorite Searches");
 		favoriteSearches = newFavorites;
 		this.saveFavoriteSearches({searches:favoriteSearches});
 		sendResponse("Searches cleared")
 	},
 
+	getCategories: function(request, sender, sendResponse) {
+		sendResponse(categories);
+	},
+
+	clearCategories: function(request, sender, sendResponse) {
+		const newCats = [];
+		favoriteSearches = newCats;
+		this.saveCategories({categories: newCats});
+		sendResponse("Categories cleared.");
+	},
 
 	translate: function(request, sender, sendResponse) {
-		var s = request.query;
+		const s = request.query;
 
-		var translation = translateQuery(s);
+		const translation = translateQuery(s);
 		sendResponse(translation);
 	},
 
@@ -153,6 +205,8 @@ var background = {
 		this.loadDictionary();
 
 		this.loadFavoriteSearches();
+
+		this.loadCategories();
 
 		createContextMenus();
 
@@ -176,7 +230,7 @@ var background = {
 			}
 		});
 
-	},
+	}
 };
 
 function menuOpenOptions(){
@@ -196,11 +250,17 @@ function menuAddTranslation() {
 								&& !keywordName.trim().match(SPACED_KEYWORD_REGEX))
 	if(keywordName == null) return;
 
+	keywordName = keywordName.trim();
+
 	chrome.tabs.executeScript( {
     	code: "window.getSelection().toString();"
 	}, function(selection) {
-		var selectedText = selection[0];
-		background.addKeyword({englishName:keywordName, translations: [selectedText]}, null, function(response){
+		const selectedText = selection[0].trim();
+		if(selectedText.length==0) return;
+
+		const newKey = new Keyword(keywordName, [selectedText]);
+
+		background.addKeyword({keyword: newKey}, null, function(response){
 			console.log("Got a response: ", response);
 		});
 	});
@@ -212,8 +272,12 @@ function menuAddKeyword(){
 	chrome.tabs.executeScript( {
     	code: "window.getSelection().toString();"
 	}, function(selection) {
-		var selectedText = selection[0];
-		background.addKeyword({englishName: selectedText, translations: []}, null, function(response){
+		const selectedText = selection[0].trim();
+		if(selectedText.length==0) return;
+
+		const newKey = new Keyword(selectedText, []);
+
+		background.addKeyword({keyword: newKey}, null, function(response){
 			console.log("Got a response: ", response);
 		});
 	});
@@ -230,7 +294,7 @@ function menuAddSearch() {
 	chrome.tabs.executeScript( {
     	code: "window.getSelection().toString();"
 	}, function(selection) {
-		var selectedText = selection[0];
+		const selectedText = selection[0];
 		background.addFavoriteSearch({name:searchName, query: selectedText}, null, function(response){
 			console.log("Got a response: ", response);
 		});
@@ -275,6 +339,10 @@ function setFavoriteSearches(searches) {
 	favoriteSearches = searches;
 }
 
+function setCategories(cat) {
+	categories = cat;
+}
+
 
 function addQuotes(str) {
 	return "\"" + str + "\"";
@@ -283,13 +351,13 @@ function addQuotes(str) {
 // creates a size x size 2D array with
 // boolean values set to false
 function createTruthTable(size) {
-	var arr = []
-	for(var i = 0; i< size; i++) {
+	let arr = []
+	for(let i = 0; i< size; i++) {
 		arr[i] = [];
 	}
 
-	for(var i = 0; i < size; i++)
-		for(var j = 0; j < size; j++)
+	for(let i = 0; i < size; i++)
+		for(let j = 0; j < size; j++)
 			arr[i][j] = false;
 	return arr;
 }
@@ -303,25 +371,23 @@ function createTruthTable(size) {
   the substring that begins with word i and ends with word j (i==j is a single word).
 */
 function populateTruthTable(table, spaceIndexes, numWords, query) {
-	var rowStart;
-	var rowEnd = numWords -1; // decreases per iteration
-	var colStart = 0; // increases per iteration
-	var wordStart = 0;
+	let rowStart;
+	let rowEnd = numWords -1; // decreases per iteration
+	let colStart = 0; // increases per iteration
+	let wordStart = 0;
 
 	while(colStart < numWords) {
 		rowStart = 0;
-		var j = colStart;
+		let j = colStart;
 		wordStart = 0;
 		while(rowStart<=rowEnd) {
-			var word;
-			var wordEnd;
+			let word;
+			let wordEnd;
 
 			if(rowStart === rowEnd)
 				wordEnd = query.length;
 			else
 				wordEnd = spaceIndexes[j]
-
-
 
 			word = query.substring(wordStart, wordEnd);
 
@@ -348,15 +414,16 @@ function populateTruthTable(table, spaceIndexes, numWords, query) {
 	surrounded by parenstheses.
 */
 function createTranslationGroup(word, collapse) {
-	var translations = dictionary.keywords[word];
+	const translations = dictionary.keywords[word].translations;
 
 	if(translations === undefined) return "";
 
 	if(word.includes(" "))
 		word = addQuotes(word);
-	var segments = [word];
-	for(var i = 0; i< translations.length; i++) {
-		var seg = translations[i];
+
+	let segments = [word];
+	for(let i = 0; i< translations.length; i++) {
+		let seg = translations[i];
 		if(seg.includes(" "))
 			seg =  addQuotes(seg);
 		segments.push(seg);
@@ -430,17 +497,16 @@ function createTranslationGroup(word, collapse) {
  */
 
 function translateQuerySegment(query, collapse) {
-	var translationGroups = [];
+	let translationGroups = [];
 
-	var spaceCount = 0;
-	var spaceIndexes = [];
-
+	let spaceCount = 0;
+	let spaceIndexes = [];
 
 	if(collapse)
 		query = query.replace(/[\(\)]/g, "");
 
 
-	for(var i = 0; i < query.length; i++) {
+	for(let i = 0; i < query.length; i++) {
 		if(query.charAt(i) === ' ') {
 			spaceCount++;
 			spaceIndexes.push(i);
@@ -448,22 +514,22 @@ function translateQuerySegment(query, collapse) {
 	}
 
 
-	var numWords = spaceCount +1;
-	var translationTable = createTruthTable(numWords);
+	let numWords = spaceCount +1;
+	const translationTable = createTruthTable(numWords);
 
 	populateTruthTable(translationTable, spaceIndexes, numWords, query);
 
-	var rowMin = 0;
-	var colMin = 0;
-	var wordStart = 0;
+	let rowMin = 0;
+	let colMin = 0;
+	let wordStart = 0;
 
 
-	for(var i = rowMin; i<= numWords-1; i++) {
+	for(let i = rowMin; i<= numWords-1; i++) {
 		innerloop:
-		for(var j = numWords-1; j>=colMin; j--) {
+		for(let j = numWords-1; j>=colMin; j--) {
 			if(translationTable[i][j]) {  //dictionary has an entry that starts with word i and ends with word j
-				var word;
-				var wordEnd;
+				let word;
+				let wordEnd;
 
 				if(j != numWords-1)
 					wordEnd = spaceIndexes[j];
@@ -473,13 +539,13 @@ function translateQuerySegment(query, collapse) {
 					word = query.substring(wordStart, wordEnd);
 
 				translationGroups.push(createTranslationGroup(word, collapse));  //creates translation group for block
-				var m = Math.max(i,j);
+				let m = Math.max(i,j);
 				colMin = m+1;
 				rowMin = m+1;  //block translated, ignore that section of the table in the next iteration
 				break innerloop;
 			} else {
 				if (j === colMin && i === j ) {  //hit the diagonal and no translation exists, add word as-is
-					var word = query.substring(wordStart, spaceIndexes[i]);
+					let word = query.substring(wordStart, spaceIndexes[i]);
 					translationGroups.push(word);
 					colMin++;
 					rowMin++;
@@ -501,12 +567,12 @@ function translateQuerySegment(query, collapse) {
 // each segment, and returns the results separated by spaces.
 function translateQuery(query) {
 
-	var matches = query.match(QUERY_REGEX);
-	var segments = [];
+	let matches = query.match(QUERY_REGEX);
+	let segments = [];
 
-	for(var i = 0; i < matches.length; i++) {
+	for(let i = 0; i < matches.length; i++) {
 
-		var orSearch = OR_SEARCH_REGEX.test(matches[i]);
+		const orSearch = OR_SEARCH_REGEX.test(matches[i]);
 		segments.push(translateQuerySegment(matches[i], orSearch));
 
 	}
@@ -515,9 +581,11 @@ function translateQuery(query) {
 }
 
 
-var dictionary, favoriteSearches;
+var dictionary, favoriteSearches, categories;
 
-//chrome.storage.sync.remove("mainDictionary");
-//chrome.storage.sync.remove("favoriteSearches");
+//chrome.storage.local.remove("mainDictionary");
+//chrome.storage.local.remove("favoriteSearches");
+
+
 
 background.init();

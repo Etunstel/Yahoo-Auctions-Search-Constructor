@@ -5,32 +5,88 @@
 	<link rel="stylesheet" type="text/css" href="options.css">
 	<meta charset="utf-8"/>
 	<title></title>
-	<h1> Ki Options / キ オプション</h1>
+	<h1><span> Ki Options / キ オプション</span></h1>
 </head>
 <body>
-
-	<div class= "header-outer">
-		<table class = "table-header">
-			<tr>
-				<th>English</th>
-				<th class = "translation-column">Translations</th>
-				<th class = "delete-column">&#x2a2f;</th>
-			</tr>
-
-		</table>
-	</div>
-	<div class= "table-outer" spellcheck="false">
-
-		<table id = "keywordTable">
-
-			<tbody></tbody>
-
-		</table>
-	</div>
-
-	<div id = "save-add">
-			<button id = "add-button" >Add New Keyword</button>
-			<button id = "save-button" >Save Dictionary Changes</button>
+	<div id = "outer">
+		<div class = "menu">
+			<button class = "tabButton active" data-view = "dictionary">Dictionary</button>
+			<button class = "tabButton" data-view = "savedSearches">Saved Searches</button>
+			<button class = "tabButton" data-view ="categoryLinks">Category Links</button>
+			<button class = "tabButton" data-view = "importExport" >Import/Export</button>
+			<button class = "tabButton" data-view ="about" >About</button>
 		</div>
+
+		<div id = "dictionary" class = "tabContent active">
+
+
+			<div id = "category-menu">
+				<div><h3>Categories / カテゴリー</h3></div>
+				<ol >
+					<button id = "all-button" class = "category-button active" data-category = "All">All</button>
+					<button id = "uncat-button" class = "category-button" data-category = "Uncategorized"> Uncategorized</button>
+				</ol>
+				<div id = "custom-category-outer">
+					<ul id = "category-buttons">
+
+
+					</ul>
+				</div>
+			</div>
+
+			<div id = "dictionary-outer">
+				<div class= "header-outer">
+					<table class = "table-header">
+						<tr>
+							<th>English</th>
+							<th class = "translation-column">Translations</th>
+							<th class = "delete-column">&#x2a2f;</th>
+						</tr>
+						<tr id = "placeholder-row"><td  colspan = 3>No keywords in this category!</td></tr>
+					</table>
+				</div>
+
+				<div class = "table-outer">
+					<table id = "keyword-table">
+
+						<tbody>
+
+						</tbody>
+
+					</table>
+
+				</div>
+			</div>
+
+			<div id = "dictionary-buttons">
+					<button id = "add-keyword-button" >Add New Keyword</button>
+					<button id = "save-button" >Save Dictionary Changes</button>
+
+					<button id = "add-category-button" >Add New Category</button>
+					<button id = "del-category-button" disabled>Delete Current Category</button>
+					<button id = "purge-category-button" disabled>Delete Category + Keywords</button>
+			</div>
+
+
+
+
+		</div>
+
+		<div id = "savedSearches" class = "tabContent">
+			Saved searches go here :)
+		</div>
+
+		<div id = "categoryLinks" class = "tabContent">
+			Category links go here :)
+		</div>
+
+		<div id = "importExport" class = "tabContent">
+			Import export i guess
+		</div>
+
+		<div id = "about" class = "tabContent">
+			About yay
+		</div>
+	</div>
 </body>
 </html>
